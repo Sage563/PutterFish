@@ -1,0 +1,39 @@
+name: Build and Release Windows Executable
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on pushes to tags starting with 'v' (e.g., v1.0.0)
+
+jobs:
+  build:
+    runs-on: windows-latest # Use a Windows environment
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run build script
+      run: |
+        .\build.bat
+      # Note: Adjust the command if your script is in a different location or needs specific environment setup
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is automatically provided
+
+    - name: Upload Executable to Release
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/uci.exe # **CHANGE THIS to the actual path of your compiled .exe**
+        asset_name: PutterfishUCI.exe # **CHANGE THIS to the desired name of the file**
+        asset_content_type: application/vnd.microsoft.portable-executable
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
